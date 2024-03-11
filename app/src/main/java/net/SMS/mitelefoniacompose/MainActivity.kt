@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package net.ivanvega.mitelefoniacompose
 
 import android.content.BroadcastReceiver
@@ -6,21 +8,29 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.provider.Telephony
+import android.telephony.SmsManager
 import android.telephony.SmsMessage
+import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import net.ivanvega.mitelefoniacompose.ui.theme.MiTelefoniaComposeTheme
 
 class MainActivity : ComponentActivity() {
@@ -63,18 +73,32 @@ fun SystemBroadcastReceiver(systemAction: String,
 
 @Composable
 fun HomeScreen() {
-    SystemBroadcastReceiver(Telephony.Sms.Intents.SMS_RECEIVED_ACTION) { intent ->
-        val isCharging = /* Get from batteryStatus ... */ true
-        /* Do something if the device is charging */
-        var strMensaje = ""
-        val bndSMS: Bundle? = intent?.getExtras()
-        val pdus = bndSMS?.get("pdus") as Array<Any>?
-        val smms: Array<SmsMessage?> = arrayOfNulls<SmsMessage>(pdus!!.size)
-        for (i in smms.indices) {
-            smms[i] = SmsMessage.createFromPdu(pdus!![i] as ByteArray)
-            strMensaje +="${"Mensaje: " + smms[i]?.getOriginatingAddress()}\n" +
-                    "${smms[i]?.getMessageBody().toString()}"
+    val context = LocalContext.current
+    val phoneNumberState = remember { mutableStateOf(TextFieldValue()) }
+    val messageState = remember { mutableStateOf(TextFieldValue()) }
+    Column {
+        TextField(
+            value = phoneNumberState.value,
+            onValueChange = { phoneNumberState.value = it },
+            label = { Text("Phone Number") }
+        )
+        TextField(
+            value = messageState.value,
+            onValueChange = { messageState.value = it },
+            label = { Text("Message") }
+        )
+
+        SystemBroadcastReceiver(TelephonyManager.ACTION_PHONE_STATE_CHANGED) { intent ->
+            val phoneNumber = intent?.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
+            if (phoneNumber == phoneNumberState.value.text) {
+                sendSMS(context, phoneNumberState.value.text, messageState.value.text)
+            }
         }
-        Log.d("MiBroadcastEnEjecucion", strMensaje)
     }
 }
+
+private fun sendSMS(context: Context, phoneNumber: String, message: String) {
+    SmsManager.getDefault().sendTextMessage(phoneNumber, null, message, null, null)
+}
+
+
