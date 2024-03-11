@@ -7,15 +7,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.provider.Telephony
-import android.telephony.SmsManager
-import android.telephony.SmsMessage
 import android.telephony.TelephonyManager
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,13 +22,13 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.ivanvega.mitelefoniacompose.ui.theme.MiTelefoniaComposeTheme
 
@@ -72,33 +71,47 @@ fun SystemBroadcastReceiver(systemAction: String,
 }
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(screenViewModel: ScreenViewModel = viewModel()) {
     val context = LocalContext.current
-    val phoneNumberState = remember { mutableStateOf(TextFieldValue()) }
-    val messageState = remember { mutableStateOf(TextFieldValue()) }
-    Column {
-        TextField(
-            value = phoneNumberState.value,
-            onValueChange = { phoneNumberState.value = it },
-            label = { Text("Phone Number") }
-        )
-        TextField(
-            value = messageState.value,
-            onValueChange = { messageState.value = it },
-            label = { Text("Message") }
-        )
-
-        SystemBroadcastReceiver(TelephonyManager.ACTION_PHONE_STATE_CHANGED) { intent ->
-            val phoneNumber = intent?.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
-            if (phoneNumber == phoneNumberState.value.text) {
-                sendSMS(context, phoneNumberState.value.text, messageState.value.text)
+    Surface (modifier = Modifier.fillMaxSize(), color= Color.Cyan){
+        Column(modifier = Modifier,
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            val phoneNumberState = screenViewModel.phoneNumber.value
+            val messageState = screenViewModel.message.value
+            TextField(
+                value = phoneNumberState,
+                onValueChange = { screenViewModel.setPhoneNumber(it.text) },
+                label = { Text("Phone Number") },
+                enabled = true,
+                visualTransformation = VisualTransformation.None
+            )
+            TextField(
+                value = messageState,
+                onValueChange = { screenViewModel.setMessage(it.text) },
+                label = { Text("Message") },
+                enabled = true,
+                visualTransformation = VisualTransformation.None
+            )
+            Button(
+                onClick = {
+                    screenViewModel.sendSMS(
+                        context,
+                        phoneNumberState.text,
+                        messageState.text
+                    )
+                },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Send SMS")
+            }
+            SystemBroadcastReceiver(TelephonyManager.ACTION_PHONE_STATE_CHANGED) { intent ->
+                val phoneNumber = intent?.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
+                if (phoneNumber == phoneNumberState.text) {
+                    screenViewModel.sendSMS(context, phoneNumberState.text, messageState.text)
+                }
             }
         }
     }
 }
-
-private fun sendSMS(context: Context, phoneNumber: String, message: String) {
-    SmsManager.getDefault().sendTextMessage(phoneNumber, null, message, null, null)
-}
-
 
