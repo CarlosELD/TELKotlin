@@ -39,36 +39,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-@Composable
-fun SystemBroadcastReceiver(
-    systemAction: String,
+fun SystemBroadcastReceiver(systemAction: String,
     onSystemEvent: (intent: Intent?) -> Unit
 ) {
     // Grab the current context in this part of the UI tree
     val context = LocalContext.current
-
     // Safely use the latest onSystemEvent lambda passed to the function
     val currentOnSystemEvent by rememberUpdatedState(onSystemEvent)
-
     // If either context or systemAction changes, unregister and register again
     DisposableEffect(context, systemAction) {
         val intentFilter = IntentFilter(systemAction)
         val broadcast = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                currentOnSystemEvent(intent)
-            }
-        }
-
+                currentOnSystemEvent(intent) } }
         context.registerReceiver(broadcast, intentFilter)
-
         // When the effect leaves the Composition, remove the callback
         onDispose {
             context.unregisterReceiver(broadcast)
@@ -78,9 +63,6 @@ fun SystemBroadcastReceiver(
 
 @Composable
 fun HomeScreen() {
-
-
-
     SystemBroadcastReceiver(Telephony.Sms.Intents.SMS_RECEIVED_ACTION) { intent ->
         val isCharging = /* Get from batteryStatus ... */ true
         /* Do something if the device is charging */
@@ -92,20 +74,7 @@ fun HomeScreen() {
             smms[i] = SmsMessage.createFromPdu(pdus!![i] as ByteArray)
             strMensaje +="${"Mensaje: " + smms[i]?.getOriginatingAddress()}\n" +
                     "${smms[i]?.getMessageBody().toString()}"
-
-
         }
         Log.d("MiBroadcastEnEjecucion", strMensaje)
-
-    }
-    Greeting(name = "Hola Mundo")
-    /* Rest of the HomeScreen */
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MiTelefoniaComposeTheme {
-        Greeting("Android")
     }
 }

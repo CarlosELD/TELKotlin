@@ -12,10 +12,8 @@ import android.widget.Toast
 
 class MiReceiverTelefonia: BroadcastReceiver()
 {
-
-
     override fun onReceive(p0: Context?, intent: Intent?) {
-        val action: String? = intent?.getAction()
+        val action: String? = intent?.action
         //Uri uri = intent.getData();
         action?.let { Log.d("MiBroadcast", it) }
          var strMensaje: String = ""
@@ -28,19 +26,15 @@ class MiReceiverTelefonia: BroadcastReceiver()
         }
         if (action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
             val bndSMS: Bundle? = intent?.getExtras()
-            val pdus = bndSMS?.get("pdus") as Array<Any>?
+            val pdus = bndSMS?.get("pdus") as Array<*>?
             val smms: Array<SmsMessage?> = arrayOfNulls<SmsMessage>(pdus!!.size)
             for (i in smms.indices) {
-                smms[i] = SmsMessage.createFromPdu(pdus!![i] as ByteArray)
+                smms[i] = SmsMessage.createFromPdu(pdus[i] as ByteArray)
                 strMensaje +="${"Mensaje: " + smms[i]?.getOriginatingAddress()}\n" +
-                        "${smms[i]?.getMessageBody().toString()}"
-
-
+                        smms[i]?.getMessageBody().toString()
             }
             Log.d("MiBroadcast", strMensaje)
         }
-
-
         //Log.d("MiBroadcast", action)
         //Log.d("MiBroadcast", uri.toString());
         //Log.d("MiBroadcast", uri.toString());
@@ -48,19 +42,15 @@ class MiReceiverTelefonia: BroadcastReceiver()
             context.getApplicationContext(),
             action, Toast.LENGTH_SHORT
         ).show()
-
         Toast.makeText(
             context.getApplicationContext(),
             strMensaje, Toast.LENGTH_SHORT
         ).show()*/
-
         val sb = StringBuilder()
         sb.append("Action: " + intent?.getAction() + "\n")
         sb.append("URI: " + intent?.toUri(Intent.URI_INTENT_SCHEME).toString() + "\n")
         val log = sb.toString()
         /*Log.d(TAG, log)
         Toast.makeText(context, log, Toast.LENGTH_LONG).show()*/
-
-
     }
 }
