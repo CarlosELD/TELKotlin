@@ -12,6 +12,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -83,15 +84,16 @@ fun HomeScreen(screenViewModel: ScreenViewModel = viewModel()) {
                 value = phoneNumberState,
                 onValueChange = { screenViewModel.setPhoneNumber(it.text) },
                 label = { Text("Phone Number") },
-                enabled = true,
-                visualTransformation = VisualTransformation.None
+                enabled = true, // Habilitar la edición del número de teléfono
+                visualTransformation = VisualTransformation.None // Para evitar la inversión del texto
             )
+            Spacer(modifier = Modifier.padding(10.dp))
             TextField(
                 value = messageState,
                 onValueChange = { screenViewModel.setMessage(it.text) },
                 label = { Text("Message") },
-                enabled = true,
-                visualTransformation = VisualTransformation.None
+                enabled = true, // Habilitar la edición del mensaje
+                visualTransformation = VisualTransformation.None // Para evitar la inversión del texto
             )
             Button(
                 onClick = {
